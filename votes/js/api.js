@@ -1,28 +1,45 @@
 /* ============================================
    API Service Layer
    Fetches data from NosDéputés.fr & NosSénateurs.fr
+   Uses CORS proxy for cross-origin requests
    ============================================ */
 
 const API = (() => {
     const BASE_DEPUTES = 'https://www.nosdeputes.fr';
     const BASE_SENATEURS = 'https://www.nossenateurs.fr';
 
+    // CORS proxy to bypass cross-origin restrictions
+    const CORS_PROXY = 'https://corsproxy.io/?';
+
     // Simple in-memory cache
     const cache = new Map();
-    const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+    const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+    function proxyUrl(url) {
+        return CORS_PROXY + encodeURIComponent(url);
+    }
 
     async function fetchJSON(url) {
-        const cached = cache.get(url);
+        const cacheKey = url;
+        const cached = cache.get(cacheKey);
         if (cached && Date.now() - cached.time < CACHE_TTL) {
             return cached.data;
         }
 
-        const response = await fetch(url);
+        // Try direct first, fallback to proxy
+        let response;
+        try {
+            response = await fetch(url);
+            if (!response.ok) throw new Error('direct failed');
+        } catch (e) {
+            response = await fetch(proxyUrl(url));
+        }
+
         if (!response.ok) {
-            throw new Error(`Erreur HTTP ${response.status} pour ${url}`);
+            throw new Error(`Erreur HTTP ${response.status}`);
         }
         const data = await response.json();
-        cache.set(url, { data, time: Date.now() });
+        cache.set(cacheKey, { data, time: Date.now() });
         return data;
     }
 
