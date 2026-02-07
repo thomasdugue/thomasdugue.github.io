@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votes du Parlement Français - Assemblée Nationale & Sénat</title>
+    <meta name="description" content="Suivez les votes de chaque député et sénateur à l'Assemblée nationale et au Sénat. Transparence parlementaire pour les citoyens.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <a href="#/" class="logo">
+                <span class="logo-icon">&#127467;&#127479;</span>
+                <div class="logo-text">
+                    <h1>Votes du Parlement</h1>
+                    <p class="tagline">Transparence parlementaire pour les citoyens</p>
+                </div>
+            </a>
+            <nav class="main-nav">
+                <a href="#/" class="nav-link" data-page="home">Accueil</a>
+                <a href="#/deputes" class="nav-link" data-page="deputes">Députés</a>
+                <a href="#/senateurs" class="nav-link" data-page="senateurs">Sénateurs</a>
+                <a href="#/scrutins" class="nav-link" data-page="scrutins">Scrutins</a>
+            </nav>
+            <button class="mobile-menu-btn" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <main id="app" class="container">
+        <!-- Content rendered by JS router -->
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>Données issues de <a href="https://www.nosdeputes.fr" target="_blank" rel="noopener">NosDéputés.fr</a> et <a href="https://www.nossenateurs.fr" target="_blank" rel="noopener">NosSénateurs.fr</a> (Regards Citoyens) - Licence CC-BY-SA / ODbL</p>
+            <p>Données officielles : <a href="https://data.assemblee-nationale.fr" target="_blank" rel="noopener">Assemblée nationale</a> &middot; <a href="https://data.senat.fr" target="_blank" rel="noopener">Sénat</a></p>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/pages.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
