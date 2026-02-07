@@ -15,7 +15,7 @@
 
     // Mobile menu toggle
     document.querySelector('.mobile-menu-btn')?.addEventListener('click', () => {
-        document.querySelector('.main-nav')?.classList.toggle('open');
+        document.querySelector('.nav-links')?.classList.toggle('open');
     });
 
     // Init router

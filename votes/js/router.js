@@ -66,7 +66,7 @@ const Router = (() => {
         window.scrollTo(0, 0);
 
         // Close mobile menu
-        document.querySelector('.main-nav')?.classList.remove('open');
+        document.querySelector('.nav-links')?.classList.remove('open');
     }
 
     function init() {

@@ -60,25 +60,16 @@ const Pages = (() => {
 
             <div class="quick-links">
                 <a href="#/deputes" class="quick-link-card">
-                    <div class="quick-link-icon">&#127963;</div>
-                    <div>
-                        <h3>Assemblee nationale</h3>
-                        <p>577 deputes - Consultez leur profil et leurs votes sur chaque scrutin.</p>
-                    </div>
+                    <h3>Assemblee nationale</h3>
+                    <p>577 deputes &mdash; Consultez leur profil et leurs votes sur chaque scrutin.</p>
                 </a>
                 <a href="#/senateurs" class="quick-link-card">
-                    <div class="quick-link-icon">&#127963;</div>
-                    <div>
-                        <h3>Senat</h3>
-                        <p>348 senateurs - Suivez les votes nominatifs des scrutins publics au Senat.</p>
-                    </div>
+                    <h3>Senat</h3>
+                    <p>348 senateurs &mdash; Suivez les votes nominatifs des scrutins publics au Senat.</p>
                 </a>
                 <a href="#/scrutins" class="quick-link-card">
-                    <div class="quick-link-icon">&#128203;</div>
-                    <div>
-                        <h3>Derniers scrutins</h3>
-                        <p>Consultez les resultats de chaque vote et le detail par groupe parlementaire.</p>
-                    </div>
+                    <h3>Derniers scrutins</h3>
+                    <p>Consultez les resultats de chaque vote et le detail par groupe parlementaire.</p>
                 </a>
             </div>
 
