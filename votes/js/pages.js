@@ -33,6 +33,9 @@ const Pages = (() => {
     // =============================================
     // HOME PAGE
     // =============================================
+    let _cachedDeputes = null;
+    let _cachedSenateurs = null;
+
     function renderHome() {
         app().innerHTML = `
             <div class="hero">
@@ -40,6 +43,7 @@ const Pages = (() => {
                 <p>Decouvrez comment chaque depute et senateur vote les propositions de loi a l'Assemblee nationale et au Senat.</p>
                 <div class="hero-search">
                     <input type="search" id="global-search" placeholder="Rechercher un depute, senateur ou scrutin..." autocomplete="off">
+                    <div class="search-dropdown" id="search-dropdown"></div>
                 </div>
             </div>
 
@@ -74,22 +78,94 @@ const Pages = (() => {
             </div>
 
             <div class="recent-section">
-                <h3 class="section-title">Derniers scrutins a l'Assemblee nationale</h3>
+                <h3 class="section-title">Dernier scrutin a l'Assemblee nationale</h3>
+                <div id="latest-scrutin">
+                    <div class="loading"><div class="loading-spinner"></div></div>
+                </div>
+            </div>
+
+            <div class="recent-section">
+                <h3 class="section-title">Derniers scrutins</h3>
                 <div id="recent-scrutins">
                     <div class="loading"><div class="loading-spinner"></div></div>
                 </div>
             </div>
         `;
 
-        // Load stats
+        // Load stats & data
         loadHomeStats();
 
-        // Search handler
+        // Live search
         const searchInput = document.getElementById('global-search');
-        searchInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && searchInput.value.trim()) {
-                window.location.hash = `#/deputes?q=${encodeURIComponent(searchInput.value.trim())}`;
+        const dropdown = document.getElementById('search-dropdown');
+
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.trim().toLowerCase();
+            if (q.length < 2) {
+                dropdown.innerHTML = '';
+                dropdown.style.display = 'none';
+                return;
             }
+            renderSearchDropdown(q, dropdown);
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                dropdown.innerHTML = '';
+                dropdown.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.hero-search')) {
+                dropdown.style.display = 'none';
+            }
+        });
+    }
+
+    function renderSearchDropdown(q, dropdown) {
+        const results = [];
+
+        if (_cachedDeputes) {
+            _cachedDeputes.filter(d =>
+                (d.nom || '').toLowerCase().includes(q) ||
+                (d.prenom || '').toLowerCase().includes(q) ||
+                (d.nom_de_famille || '').toLowerCase().includes(q)
+            ).slice(0, 5).forEach(d => {
+                results.push(`<a class="search-dropdown-item" href="#/depute/${d.slug}">
+                    <span class="search-dropdown-type">Depute</span>
+                    <span class="search-dropdown-name">${escapeHtml(d.nom)}</span>
+                    <span class="search-dropdown-detail">${escapeHtml(d.groupe_sigle || '')}</span>
+                </a>`);
+            });
+        }
+
+        if (_cachedSenateurs) {
+            _cachedSenateurs.filter(s =>
+                (s.nom || '').toLowerCase().includes(q) ||
+                (s.prenom || '').toLowerCase().includes(q) ||
+                (s.nom_de_famille || '').toLowerCase().includes(q)
+            ).slice(0, 5).forEach(s => {
+                results.push(`<a class="search-dropdown-item" href="#/senateur/${s.slug}">
+                    <span class="search-dropdown-type">Senateur</span>
+                    <span class="search-dropdown-name">${escapeHtml(s.nom)}</span>
+                    <span class="search-dropdown-detail">${escapeHtml(s.groupe_sigle || '')}</span>
+                </a>`);
+            });
+        }
+
+        if (results.length === 0) {
+            dropdown.innerHTML = '<div class="search-dropdown-empty">Aucun resultat</div>';
+        } else {
+            dropdown.innerHTML = results.join('');
+        }
+        dropdown.style.display = 'block';
+
+        dropdown.querySelectorAll('.search-dropdown-item').forEach(item => {
+            item.addEventListener('click', () => {
+                dropdown.style.display = 'none';
+                document.getElementById('global-search').value = '';
+            });
         });
     }
 
@@ -99,8 +175,12 @@ const Pages = (() => {
                 API.getDeputes(),
                 API.getSenateurs()
             ]);
-            document.getElementById('stat-deputes').textContent = deputes.length;
-            document.getElementById('stat-senateurs').textContent = senateurs.length;
+            _cachedDeputes = deputes;
+            _cachedSenateurs = senateurs;
+            const depEl = document.getElementById('stat-deputes');
+            const senEl = document.getElementById('stat-senateurs');
+            if (depEl) depEl.textContent = deputes.length;
+            if (senEl) senEl.textContent = senateurs.length;
         } catch (e) {
             console.error('Stats load error:', e);
         }
@@ -110,16 +190,54 @@ const Pages = (() => {
             const el = document.getElementById('stat-scrutins');
             if (el) el.textContent = scrutins.length;
 
-            // Render recent scrutins
-            const recent = scrutins.slice(0, 5);
+            // Render latest scrutin highlighted
+            if (scrutins.length > 0) {
+                const latest = scrutins[0];
+                const latestContainer = document.getElementById('latest-scrutin');
+                if (latestContainer) {
+                    const sort = latest.sort || '';
+                    const isAdopte = sort === 'adopte' || sort === 'adoptée' || sort === 'adopté';
+                    const resultClass = isAdopte ? 'result-adopte' : 'result-rejete';
+                    const resultLabel = isAdopte ? 'Adopte' : 'Rejete';
+                    const pour = parseInt(latest.nombre_pours) || 0;
+                    const contre = parseInt(latest.nombre_contres) || 0;
+                    const abst = parseInt(latest.nombre_abstentions) || 0;
+                    const total = pour + contre + abst || 1;
+
+                    latestContainer.innerHTML = `
+                        <div class="latest-scrutin-card" onclick="window.location.hash='#/scrutin/${latest.numero}'">
+                            <div class="latest-scrutin-title">${escapeHtml(latest.titre || latest.demandeur || 'Scrutin n\u00b0' + latest.numero)}</div>
+                            <div class="latest-scrutin-meta">
+                                <span>${escapeHtml(API.formatDate(latest.date))}</span>
+                                <span class="scrutin-result ${resultClass}">${resultLabel}</span>
+                            </div>
+                            <div class="vote-summary-bar">
+                                <div class="votes-pour" style="width: ${(pour/total*100).toFixed(1)}%"></div>
+                                <div class="votes-contre" style="width: ${(contre/total*100).toFixed(1)}%"></div>
+                                <div class="votes-abstention" style="width: ${(abst/total*100).toFixed(1)}%"></div>
+                            </div>
+                            <div class="vote-summary-counts">
+                                <span class="count-pour">Pour : ${pour}</span>
+                                <span class="count-contre">Contre : ${contre}</span>
+                                <span class="count-abstention">Abstentions : ${abst}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            // Render next 5 recent scrutins
+            const recent = scrutins.slice(1, 6);
             const container = document.getElementById('recent-scrutins');
             if (container) {
                 container.innerHTML = recent.map(s => renderScrutinCard(s)).join('');
             }
         } catch (e) {
             console.error('Scrutins load error:', e);
+            const lc = document.getElementById('latest-scrutin');
+            if (lc) lc.innerHTML = '<p class="empty-state">Impossible de charger les scrutins.</p>';
             const container = document.getElementById('recent-scrutins');
-            if (container) container.innerHTML = '<p class="empty-state">Impossible de charger les scrutins recents.</p>';
+            if (container) container.innerHTML = '';
         }
     }
 
@@ -164,7 +282,7 @@ const Pages = (() => {
         let allDeputes = [];
         let filteredDeputes = [];
         let currentPage = 1;
-        const perPage = 30;
+        const perPage = 60;
 
         API.getDeputes().then(deputes => {
             allDeputes = deputes;
@@ -186,7 +304,7 @@ const Pages = (() => {
                         ${groups.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}
                     </select>
                 </div>
-                <div id="deputes-count" style="margin-bottom:1rem; color: var(--gris-moyen); font-size: 0.9rem;"></div>
+                <div id="deputes-count" style="margin-bottom:1rem; color: var(--ink-light); font-size: 0.9rem;"></div>
                 <div class="cards-grid" id="deputes-list"></div>
                 <div class="pagination" id="deputes-pagination"></div>
             `;
@@ -261,7 +379,7 @@ const Pages = (() => {
         let allSenateurs = [];
         let filteredSenateurs = [];
         let currentPage = 1;
-        const perPage = 30;
+        const perPage = 60;
 
         API.getSenateurs().then(senateurs => {
             allSenateurs = senateurs;
@@ -277,7 +395,7 @@ const Pages = (() => {
                         ${groups.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}
                     </select>
                 </div>
-                <div id="senateurs-count" style="margin-bottom:1rem; color: var(--gris-moyen); font-size: 0.9rem;"></div>
+                <div id="senateurs-count" style="margin-bottom:1rem; color: var(--ink-light); font-size: 0.9rem;"></div>
                 <div class="cards-grid" id="senateurs-list"></div>
                 <div class="pagination" id="senateurs-pagination"></div>
             `;
@@ -383,7 +501,7 @@ const Pages = (() => {
                         <option value="rejete">Rejetes</option>
                     </select>
                 </div>
-                <div id="scrutins-count" style="margin-bottom:1rem; color: var(--gris-moyen); font-size: 0.9rem;"></div>
+                <div id="scrutins-count" style="margin-bottom:1rem; color: var(--ink-light); font-size: 0.9rem;"></div>
                 <div id="scrutins-list"></div>
                 <div class="pagination" id="scrutins-pagination"></div>
             `;
@@ -523,15 +641,15 @@ const Pages = (() => {
                         <div class="profile-stat-label">Votes enregistres</div>
                     </div>
                     <div class="profile-stat">
-                        <div class="profile-stat-number" style="color: var(--vert)">${stats.pour}</div>
+                        <div class="profile-stat-number" style="color: var(--jade)">${stats.pour}</div>
                         <div class="profile-stat-label">Pour</div>
                     </div>
                     <div class="profile-stat">
-                        <div class="profile-stat-number" style="color: var(--rouge)">${stats.contre}</div>
+                        <div class="profile-stat-number" style="color: var(--crimson)">${stats.contre}</div>
                         <div class="profile-stat-label">Contre</div>
                     </div>
                     <div class="profile-stat">
-                        <div class="profile-stat-number" style="color: var(--orange)">${stats.abstention}</div>
+                        <div class="profile-stat-number" style="color: var(--mandarin)">${stats.abstention}</div>
                         <div class="profile-stat-label">Abstentions</div>
                     </div>
                 </div>
@@ -647,15 +765,15 @@ const Pages = (() => {
                         <div class="profile-stat-label">Votes enregistres</div>
                     </div>
                     <div class="profile-stat">
-                        <div class="profile-stat-number" style="color: var(--vert)">${stats.pour}</div>
+                        <div class="profile-stat-number" style="color: var(--jade)">${stats.pour}</div>
                         <div class="profile-stat-label">Pour</div>
                     </div>
                     <div class="profile-stat">
-                        <div class="profile-stat-number" style="color: var(--rouge)">${stats.contre}</div>
+                        <div class="profile-stat-number" style="color: var(--crimson)">${stats.contre}</div>
                         <div class="profile-stat-label">Contre</div>
                     </div>
                     <div class="profile-stat">
-                        <div class="profile-stat-number" style="color: var(--orange)">${stats.abstention}</div>
+                        <div class="profile-stat-number" style="color: var(--mandarin)">${stats.abstention}</div>
                         <div class="profile-stat-label">Abstentions</div>
                     </div>
                 </div>
@@ -849,7 +967,7 @@ const Pages = (() => {
             <a href="#/scrutins" class="back-link">&larr; Retour aux scrutins</a>
             <div class="vote-detail-header">
                 <h2>Scrutin n&deg;${escapeHtml(String(numero))} au Senat</h2>
-                <p style="margin-top:1rem; color: var(--gris-moyen);">
+                <p style="margin-top:1rem; color: var(--ink-light);">
                     Le detail de ce scrutin est disponible sur
                     <a href="https://www.nossenateurs.fr/scrutin/${numero}" target="_blank" rel="noopener">NosSenateurs.fr</a>.
                 </p>
