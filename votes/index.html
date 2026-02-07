@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votes du Parlement &mdash; Assembl&eacute;e nationale &amp; S&eacute;nat</title>
+    <meta name="description" content="Suivez les votes de chaque député et sénateur à l'Assemblée nationale et au Sénat. Transparence parlementaire pour les citoyens.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Top bar -->
+    <div class="topbar">
+        <div class="topbar-inner">
+            <span class="topbar-date" id="topbar-date"></span>
+            <span class="topbar-edition">Donn&eacute;es ouvertes &middot; Licence CC-BY-SA</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="#/" class="masthead">Votes du Parlement</a>
+            <p class="masthead-sub">Transparence parlementaire pour les citoyens</p>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="nav-inner">
+            <button class="mobile-menu-btn" aria-label="Menu">
+                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M2 4h16M2 10h16M2 16h16" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+            </button>
+            <div class="nav-links">
+                <a href="#/" class="nav-link" data-page="home">Accueil</a>
+                <a href="#/deputes" class="nav-link" data-page="deputes">D&eacute;put&eacute;s</a>
+                <a href="#/senateurs" class="nav-link" data-page="senateurs">S&eacute;nateurs</a>
+                <a href="#/scrutins" class="nav-link" data-page="scrutins">Scrutins</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <main id="app" class="main-content">
+        <!-- SPA content rendered here -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-col">
+                <h4>Sources</h4>
+                <p>Donn&eacute;es issues de <a href="https://www.nosdeputes.fr" target="_blank" rel="noopener">NosDéputés.fr</a> et <a href="https://www.nossenateurs.fr" target="_blank" rel="noopener">NosSénateurs.fr</a> par Regards Citoyens.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Donn&eacute;es officielles</h4>
+                <p><a href="https://data.assemblee-nationale.fr" target="_blank" rel="noopener">data.assemblee-nationale.fr</a></p>
+                <p><a href="https://data.senat.fr" target="_blank" rel="noopener">data.senat.fr</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/pages.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Set today's date in topbar
+        document.getElementById('topbar-date').textContent =
+            new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    </script>
+</body>
+</html>
